@@ -1,212 +1,234 @@
 # 41141106
 
-作業一
-
-Problem 1: Ackermann Function
+作業二
 
 ## 解題說明
 
-本題說明Ackermann 函數是一種極端增長的遞迴函數，常用於研究遞迴函數的運作效率與極限。
-題目要求實作遞迴版本 的 Ackermann 函數和非遞迴版本的演算法。
-Ackermann 函數定義如下：
-    A(0, n) = n + 1
-    A(m, 0) = A(m-1, 1)，當 m > 0
-    A(m, n) = A(m-1, A(m, n-1))，當 m > 0 且 n 
+本題實作了一個多項式 (Polynomial) 類別，建立兩個多項式。使用加法運算計算兩個多項式的和、乘法運算計算兩個多項式的乘積、求值運算計算多項式在代 x 值後的結果為多少。且輸入輸出使用 << 和 >> 運算子進行多項式的顯示和輸入。
 
 ### 解題策略
 
-遞迴版本:
-    若 m = 0，則回傳 n + 1；
-    若 n = 0，則回傳 A(m-1, 1)；
-    否則回傳 A(m-1, A(m, n-1))。
+使用動態陣列配置和維持指數降序排列，新增項目時找到正確位置插入，並且將相同指數的項目自動合併係數。
 
-非遞迴版本:
-    Ackermann 函數本質上是高度遞迴的，直接用迴圈無法處理其巢狀呼叫，因此需用「手動模擬遞迴」的方式。
+運算實作：
+
+    加法：兩個多項式的所有項目相加，指數相同的係數相加
+    乘法：對每一項進行積的運算，係數相乘、指數相加
+    求值：使用 pow() 函數計算每項的值並累加
+
 
 ## 程式實作
 
 遞迴版本：
 ```cpp
 #include <iostream>
+#include <cmath>
 using namespace std;
 
-int Ackermann(int m, int n) {
-    if (m == 0)
-        return n + 1;
-    else if (n == 0)
-        return Ackermann(m - 1, 1);
-    else
-        return Ackermann(m - 1, Ackermann(m, n - 1));
-}
-
-int main() {
-    int m = 1;
-    int n = 1;
-
-    cout << "Ackermann(" << m << ", " << n << ") = " << Ackermann(m, n) << endl;
-    return 0;
-}
-```
-
-非遞迴版本：
-```cpp
-#include <iostream>
-using namespace std;
-
-int AckermannIterative(int m, int n) {
-    const int MAX = 1000; // 根據需求可調整
-    int mStack[MAX];
-    int top = -1;
-
-    mStack[++top] = m;
-
-    while (top >= 0) {
-        m = mStack[top--];
-
-        if (m == 0)
-            n = n + 1;
-        else if (n == 0) {
-            n = 1;
-            mStack[++top] = m - 1;
-        } else {
-            mStack[++top] = m - 1;
-            mStack[++top] = m;
-            n = n - 1;
+class Polynomial {
+    float* coeff;
+    int* exp;
+    int size, capacity;
+    
+    void resize() {
+        float* tempCoeff = new float[capacity * 2];
+        int* tempExp = new int[capacity * 2];
+        for (int i = 0; i < size; i++) {
+            tempCoeff[i] = coeff[i];
+            tempExp[i] = exp[i];
+        }
+        delete[] coeff;
+        delete[] exp;
+        coeff = tempCoeff;
+        exp = tempExp;
+        capacity *= 2;
+    }
+    
+public:
+    Polynomial() : size(0), capacity(2) {
+        coeff = new float[capacity];
+        exp = new int[capacity];
+    }
+    
+    Polynomial(const Polynomial& p) : size(p.size), capacity(p.capacity) {
+        coeff = new float[capacity];
+        exp = new int[capacity];
+        for (int i = 0; i < size; i++) {
+            coeff[i] = p.coeff[i];
+            exp[i] = p.exp[i];
         }
     }
-    return n;
-}
-
-int main() {
-    int m = 1;
-    int n = 1;
-
-    cout << "Ackermann (non-recursive)(" << m << ", " << n << ") = " << AckermannIterative(m, n) << endl;
-    return 0;
-}
-```
-## 效能分析
-遞迴
-1. 時間複雜度：O(A(m,n))
-2. 空間複雜度：O(A(m,n))
-
-非遞迴
-1. 時間複雜度：O(A(m,n))
-2. 空間複雜度：O(A(m,n))
-
-## 測試與驗證
-
-### 測試案例
-
-| 測試案例 | 輸入(m,n) | 預期輸出 | 實際輸出 |
-|----------|--------------|----------|----------|
-| 測試一   | m=1 n=1      | 3        | 3        |
-| 測試二   | m=2 n=1      | 5        | 5        |
-| 測試三   | m=2 n=2      | 7        | 7        |
-| 測試四   | m=3 n=2      | 29       | 29       |
-| 測試五   | m=3 n=3      | 61       | 61       |
-
-### 編譯與執行指令
-```shell
-$ ./ackermann_recursive
-Ackermann(1, 1) = 3
-
-$ ./ackermann_nonrecursive
-Ackermann(non-recursive)(1, 1) = 3
-```
-
-### 結論
-
-1. 遞迴版本實作簡單、清晰，但不適合處理 m 或 n 較大的情況，容易導致堆疊溢位。  
-2. 非遞迴版本結構較複雜，但在應用中具有安全性與穩定性。
-
-
-## 申論及開發報告
-
-1. **遞迴與非遞迴之比較學習**  
-    遞迴版本雖然結構直觀，但在輸入值較大時會導致堆疊溢位；透過非遞迴的 stack 模擬方法，可有效減少系統呼叫層數，提升執行穩定性。
-2. **增進堆疊邏輯理解**  
-    非遞迴版本的實作過程，訓練了我使用 stack 模擬呼叫堆疊的邏輯，理解每次函數呼叫對變數狀態的影響，是程式控制流程設計的實作訓練。
-
-Problem 2: Powerset Generation
-
-## 解題說明
-本題要求撰寫一個遞迴函數來計算一個集合𝑆。
-S的冪集合（Power Set）。所謂冪集合，是指所有「子集合」的集合，包含空集合與集合本身。
-
-### 解題策略
-給定一個集合 𝑆（包含 n 個元素）。
-任一個元素都有「選或不選」兩種選擇，所以總共會有$(2^n)$種子集合，需使用遞迴方式依序列出所有子集合。
-
-## 程式實作
-
-```cpp
-#include <iostream>
-#include <string>
-using namespace std;
-
-void generatePowerSet(char set[], int n, int index, string current) {
-    if (index == n) {
-        if (current.empty())
-            cout << "{}" << endl;
-        else
-            cout << "{ " << current << "}" << endl;
-        return;
+    
+    ~Polynomial() { 
+        delete[] coeff; 
+        delete[] exp; 
     }
-
-
-    generatePowerSet(set, n, index + 1, current);
-
-    generatePowerSet(set, n, index + 1, current + set[index] + " ");
-}
+    
+    Polynomial& operator=(const Polynomial& p) {
+        if (this != &p) {
+            delete[] coeff;
+            delete[] exp;
+            size = p.size;
+            capacity = p.capacity;
+            coeff = new float[capacity];
+            exp = new int[capacity];
+            for (int i = 0; i < size; i++) {
+                coeff[i] = p.coeff[i];
+                exp[i] = p.exp[i];
+            }
+        }
+        return *this;
+    }
+    
+    void AddTerm(float c, int e) {
+        if (c == 0) return;
+        
+        for (int i = 0; i < size; i++) {
+            if (exp[i] == e) {
+                coeff[i] += c;
+                if (coeff[i] == 0) {
+                    for (int j = i; j < size - 1; j++) {
+                        coeff[j] = coeff[j + 1];
+                        exp[j] = exp[j + 1];
+                    }
+                    size--;
+                }
+                return;
+            }
+        }
+        
+        if (size == capacity) resize();
+        
+        int pos = size;
+        for (int i = 0; i < size; i++) {
+            if (e > exp[i]) {
+                pos = i;
+                break;
+            }
+        }
+        
+        for (int i = size; i > pos; i--) {
+            coeff[i] = coeff[i - 1];
+            exp[i] = exp[i - 1];
+        }
+        coeff[pos] = c;
+        exp[pos] = e;
+        size++;
+    }
+    
+    Polynomial Add(const Polynomial& p) const {
+        Polynomial result = *this;
+        for (int i = 0; i < p.size; i++) {
+            result.AddTerm(p.coeff[i], p.exp[i]);
+        }
+        return result;
+    }
+    
+    Polynomial Mult(const Polynomial& p) const {
+        Polynomial result;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < p.size; j++) {
+                result.AddTerm(coeff[i] * p.coeff[j], exp[i] + p.exp[j]);
+            }
+        }
+        return result;
+    }
+    
+    float Eval(float x) const {
+        float result = 0;
+        for (int i = 0; i < size; i++) {
+            result += coeff[i] * pow(x, exp[i]);
+        }
+        return result;
+    }
+    
+    friend ostream& operator<<(ostream& os, const Polynomial& p) {
+        if (p.size == 0) return os << "0";
+        
+        for (int i = 0; i < p.size; i++) {
+            if (i > 0 && p.coeff[i] > 0) os << " + ";
+            else if (i > 0) os << " ";
+            
+            if (p.coeff[i] < 0) os << "- " << -p.coeff[i];
+            else if (i > 0) os << p.coeff[i];
+            else os << p.coeff[i];
+            
+            if (p.exp[i] > 1) os << "x^" << p.exp[i];
+            else if (p.exp[i] == 1) os << "x";
+        }
+        return os;
+    }
+};
 
 int main() {
-    char S[] = {'a', 'b', 'c'};
-    int size = 3;
-
-    cout << "Power Set of {a, b, c}:" << endl;
-    generatePowerSet(S, size, 0, "");
-
+    Polynomial p1, p2;
+    
+    cout << "輸入p1: " << p1 << endl;
+    cout << "輸入p2: " << p2 << endl;
+    
+    cout << "Sum: " << p1.Add(p2) << endl;
+    cout << "Mult: " << p1.Mult(p2) << endl;
+    
+    cout << "p1 = " << p1.Eval(2) << endl;
+    cout << "p2 = " << p2.Eval(2) << endl;
+    
     return 0;
 }
 ```
-
 ## 效能分析
 
-1. 時間複雜度：O($(2^n)$⋅n)
-2. 空間複雜度：O(n)
+1. 時間複雜度：
+    AddTerm()：O(n)
+    Add()：O(m * n)
+    Mult()：O(n² * m²)
+    Eval()：O(n log e)
+    operator<<:O(n)
+
+2. 空間複雜度：
+    AddTerm()：O(n)
+    Add()：O(n + m)
+    Mult()：O(n * m)
+    Eval()：O(1)
+     operator<<:O(1)
 
 ## 測試與驗證
 
 ### 測試案例
-測試案例：S = {a, b, c}
 
-預期輸出：{{}, {c}, {b}, {b,c}, {a}, {a,c}, {a,b}, {a,b,c}}
+// p1 = 3x^2 + 1
 
-實際輸出：{{}, {c}, {b}, {b,c}, {a}, {a,c}, {a,b}, {a,b,c}}
+    p1.AddTerm(3,2);
+    p1.AddTerm(1, 0);
+
+// p2 = 5x^2 + 2x
+
+    p2.AddTerm(5, 2);
+    p2.AddTerm(2,1);
+    
+output
+
+    輸入p1: 3x^2 + 1
+    輸入p2: 5x^2 + 2x
+    Sum: 8x^2 + 2x + 1
+    Mult: 15x^4 + 6x^3 + 5x^2 + 2x
+    p1 = 13
+    p2 = 24
+
 
 ### 編譯與執行指令
-
 ```shell
-$ ./powerset
-Power Set of {a, b, c}:
-{}
-{c }
-{b }
-{b c }
-{a }
-{a c }
-{a b }
-{a b c }
+$ g++ -o polynomial polynomial.cpp 
+$./polynomial
 ```
 
 ### 結論
-1. 程式使用遞迴將問題拆解為更小的子問題，理解與實作 power set 是一種自然的方式。  
-2. 完整列出所有子集合，包含空集合與原集合本身，總共有$(2^n)$個子集合。
+
+實作一個完整的多項式類別，採用雙陣列結構分別儲存係數和指數來實作多項式的基本運算功能，包括加法、乘法、求值操作。在過程中乘法的實作篇複雜，需要每一項與每一項相乘。但使用了AddTerm() 函數來處理項目合併，簡化了許多。
 
 ## 申論及開發報告
-1. **組合邏輯與遞迴設計**  
-    Powerset是組合展開問題，透過遞迴實現「每個元素選或不選」的二元選擇邏輯，是遞迴設計的經典應用之一。
-2. **驗證測試與時間複雜度分析**  
-    對集合 {a, b, c} 執行 powerset 測試，預期產生 8 種子集合，結果與預期一致；並分析時間複雜度為 
-𝑂($(2^n)$⋅𝑛)。
+
+1. **項目排序與合併**  
+    在新增項目時需要維持指數降序排列，並且處理相同指數項目，所以使用了resize()函數，配合完整的建構子和解構子系統。
+2. **多項式的乘法實作**  
+    需要處理所有項目對的乘積組合，所以使用雙層迴圈，利用 AddTerm() 自動處理重複項目。
+
